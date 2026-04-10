@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Animated, {
   useAnimatedStyle,
-  withSpring,
+  withTiming,
   useSharedValue,
-  interpolate,
+  Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/hooks/useTheme';
@@ -38,32 +38,48 @@ function TabBarButton({
   onLongPress: () => void;
   colors: ReturnType<typeof useThemeColors>;
 }) {
-  const scale = useSharedValue(1);
+  const pillOpacity = useSharedValue(isFocused ? 1 : 0);
+  const pillWidth = useSharedValue(isFocused ? 1 : 0);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+  useEffect(() => {
+    const timingConfig = { duration: 280, easing: Easing.bezier(0.25, 0.1, 0.25, 1) };
+    pillOpacity.value = withTiming(isFocused ? 1 : 0, timingConfig);
+    pillWidth.value = withTiming(isFocused ? 1 : 0, timingConfig);
+  }, [isFocused]);
+
+  const pillStyle = useAnimatedStyle(() => ({
+    opacity: pillOpacity.value,
+    transform: [{ scaleX: pillWidth.value }],
   }));
-
-  const handlePress = () => {
-    scale.value = withSpring(0.85, { damping: 15 }, () => {
-      scale.value = withSpring(1, { damping: 10 });
-    });
-    onPress();
-  };
 
   return (
     <Pressable
-      onPress={handlePress}
+      onPress={onPress}
       onLongPress={onLongPress}
       style={styles.tabButton}
       accessibilityRole="tab"
       accessibilityState={{ selected: isFocused }}
       accessibilityLabel={tab.label}
     >
-      <Animated.View style={[styles.tabContent, animatedStyle]}>
+      <View style={styles.tabContent}>
+        {/* Glass pill background */}
+        <Animated.View
+          style={[
+            styles.glassPill,
+            {
+              backgroundColor: isFocused
+                ? colors.accentBlue + '18'
+                : 'transparent',
+              borderColor: isFocused
+                ? colors.accentBlue + '30'
+                : 'transparent',
+            },
+            pillStyle,
+          ]}
+        />
         <Ionicons
           name={isFocused ? tab.iconFilled : tab.icon}
-          size={22}
+          size={21}
           color={isFocused ? colors.accentBlue : colors.textMuted}
         />
         {isFocused && (
@@ -74,7 +90,7 @@ function TabBarButton({
             {tab.label}
           </Animated.Text>
         )}
-      </Animated.View>
+      </View>
     </Pressable>
   );
 }
@@ -93,8 +109,8 @@ export default function CustomTabBar({
         style={[
           styles.tabBar,
           {
-            backgroundColor: colors.surface + 'F0',
-            borderColor: colors.border,
+            backgroundColor: colors.surface + 'E8',
+            borderColor: colors.border + '80',
           },
         ]}
       >
@@ -153,23 +169,29 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingBottom: Platform.OS === 'ios' ? 28 : 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   tabBar: {
     flexDirection: 'row',
-    borderRadius: 28,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderWidth: 1,
+    borderRadius: 24,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderWidth: 0.5,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.08,
+        shadowRadius: 24,
       },
       android: {
-        elevation: 8,
+        elevation: 12,
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.08,
+        shadowRadius: 24,
       },
     }),
   },
@@ -183,13 +205,21 @@ const styles = StyleSheet.create({
   tabContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    gap: 2,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    gap: 3,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  glassPill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 18,
+    borderWidth: 0.5,
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });
