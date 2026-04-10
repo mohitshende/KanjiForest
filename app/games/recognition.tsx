@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -247,7 +248,7 @@ export default function RecognitionGame() {
       </View>
 
       {/* Card */}
-      <View style={styles.gameArea}>
+      <ScrollView style={styles.gameArea} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.kanjiCard, scaleStyle, shakeStyle]}>
           <View
             style={[
@@ -442,7 +443,8 @@ export default function RecognitionGame() {
             </Pressable>
           </Animated.View>
         )}
-      </View>
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </SafeAreaView>
   );
 }

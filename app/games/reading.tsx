@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -226,7 +227,7 @@ export default function ReadingGame() {
         />
       </View>
 
-      <View style={styles.gameArea}>
+      <ScrollView style={styles.gameArea} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
         {/* Word Card */}
         <Animated.View style={shakeStyle}>
           <View
@@ -418,7 +419,8 @@ export default function ReadingGame() {
             </Pressable>
           </Animated.View>
         )}
-      </View>
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
