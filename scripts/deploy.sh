@@ -30,6 +30,9 @@ cp vercel.json dist/vercel.json
 
 echo "=== Deploying to Vercel ==="
 cd dist
+rm -rf .vercel
+npx vercel link --project kanji-forest --yes
 npx vercel --prod --yes
+npx vercel alias set kanji-forest.vercel.app
 
 echo "=== Done ==="
