@@ -26,7 +26,9 @@ export function useKanjiProgress() {
       setKanjiData(
         (allKanji as any[]).map((k) => ({
           ...k,
-          component_kanji_ids: JSON.parse(k.component_kanji_ids || '[]'),
+          component_kanji_ids: Array.isArray(k.component_kanji_ids)
+            ? k.component_kanji_ids
+            : JSON.parse(k.component_kanji_ids || '[]'),
         }))
       );
       setUnlockedIds(new Set(unlocked));

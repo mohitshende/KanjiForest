@@ -2,6 +2,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import 'react-native-reanimated';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -20,6 +21,7 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     'NotoSansJP-Regular': require('../assets/fonts/NotoSansJP-Regular.ttf'),
     'NotoSansJP-Bold': require('../assets/fonts/NotoSansJP-Bold.ttf'),
+    Ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
   });
 
   const { isReady: dbReady } = useDatabase();

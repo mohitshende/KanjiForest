@@ -92,7 +92,9 @@ export default function KanjiDetailScreen() {
     );
   }
 
-  const componentIds: number[] = JSON.parse(kanji.component_kanji_ids || '[]');
+  const componentIds: number[] = Array.isArray(kanji.component_kanji_ids)
+    ? kanji.component_kanji_ids
+    : JSON.parse(kanji.component_kanji_ids || '[]');
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

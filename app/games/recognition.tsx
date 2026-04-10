@@ -415,6 +415,24 @@ export default function RecognitionGame() {
             >
               {isCorrect ? 'Correct!' : `Incorrect — ${correctAnswer}`}
             </Text>
+            <View style={[styles.answerDetail, { backgroundColor: colors.surfaceElevated }]}>
+              <Text style={[styles.answerKanji, { color: colors.textPrimary }]}>
+                {currentKanji.character}
+              </Text>
+              <Text style={[styles.answerMeaning, { color: colors.textSecondary }]}>
+                {currentKanji.meaning}
+              </Text>
+              {currentKanji.onyomi ? (
+                <Text style={[styles.answerReading, { color: colors.accentRed }]}>
+                  ON: {currentKanji.onyomi}
+                </Text>
+              ) : null}
+              {currentKanji.kunyomi ? (
+                <Text style={[styles.answerReading, { color: colors.accentBlue }]}>
+                  KUN: {currentKanji.kunyomi}
+                </Text>
+              ) : null}
+            </View>
             <Pressable
               style={[styles.nextBtn, { backgroundColor: colors.accentBlue }]}
               onPress={handleNext}
@@ -510,6 +528,16 @@ const styles = StyleSheet.create({
 
   resultArea: { marginTop: 16, alignItems: 'center', gap: 12 },
   resultText: { fontSize: 17, fontWeight: '700' },
+  answerDetail: {
+    width: '100%',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    gap: 4,
+  },
+  answerKanji: { fontSize: 32, fontFamily: 'NotoSansJP-Bold' },
+  answerMeaning: { fontSize: 15 },
+  answerReading: { fontSize: 13, fontWeight: '500' },
   nextBtn: {
     height: 48,
     borderRadius: 12,

@@ -293,15 +293,27 @@ export default function SettingsScreen() {
 
         <View style={styles.aboutSection}>
           <Text style={[styles.aboutText, { color: colors.textPrimary }]}>
-            KanjiForest v1.0.0
+            KanjiForest
           </Text>
-          <Text style={[styles.aboutSub, { color: colors.textSecondary }]}>
+          <Text style={[styles.version, { color: colors.textMuted }]}>
+            Version 1.0.0
+          </Text>
+          <Text style={[styles.builtBy, { color: colors.textSecondary }]}>
+            Developed by Mohit Shende
+          </Text>
+          <Text style={[styles.techStack, { color: colors.textMuted }]}>
             Built with React Native + Expo
           </Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          <Text style={[styles.creditsTitle, { color: colors.textSecondary }]}>
+            Open Source Credits
+          </Text>
           <Text style={[styles.credits, { color: colors.textMuted }]}>
-            Data: KANJIDIC2 (CC BY-SA 4.0), JMdict (CC BY-SA 4.0),{'\n'}
-            KanjiVG (CC BY-SA 4.0), Tatoeba (CC BY 2.0 FR),{'\n'}
-            JLPT classifications (Public Domain),{'\n'}
+            KANJIDIC2 (CC BY-SA 4.0){'\n'}
+            JMdict / EDICT (CC BY-SA 4.0){'\n'}
+            KanjiVG (CC BY-SA 4.0){'\n'}
+            Tatoeba Project (CC BY 2.0 FR){'\n'}
+            JLPT Classifications (Public Domain){'\n'}
             Leeds Internet Corpus (CC BY)
           </Text>
         </View>
@@ -366,7 +378,11 @@ const styles = StyleSheet.create({
   aboutSection: {
     paddingVertical: 16,
   },
-  aboutText: { fontSize: 17, fontWeight: '600' },
-  aboutSub: { fontSize: 13, marginTop: 4 },
-  credits: { fontSize: 11, marginTop: 12, lineHeight: 16 },
+  aboutText: { fontSize: 22, fontWeight: '700' },
+  version: { fontSize: 13, marginTop: 2 },
+  builtBy: { fontSize: 15, fontWeight: '600', marginTop: 12 },
+  techStack: { fontSize: 13, marginTop: 4 },
+  dividerLine: { height: 1, marginVertical: 16 },
+  creditsTitle: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
+  credits: { fontSize: 11, lineHeight: 18 },
 });

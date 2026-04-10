@@ -125,6 +125,12 @@ export async function seedDatabase(): Promise<void> {
 // Query helpers — platform-aware
 // ═══════════════════════════════════════════════════════════════
 
+export async function getAllVocabulary() {
+  if (isWeb) return vocabularyData;
+  const database = await getNativeDatabase();
+  return database.getAllAsync('SELECT * FROM vocabulary ORDER BY frequency_rank');
+}
+
 export async function getAllKanji() {
   if (isWeb) return kanjiData;
   const database = await getNativeDatabase();

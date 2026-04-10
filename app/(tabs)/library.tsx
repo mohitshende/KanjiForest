@@ -18,7 +18,9 @@ import {
   searchKanji,
   searchVocabulary,
   getAllKanji,
-  getDatabase,
+  getAllVocabulary,
+  getMasteredKanjiIds,
+  getUnlockedKanjiIds,
 } from '@/lib/database';
 
 // ---------------------------------------------------------------------------
@@ -98,19 +100,10 @@ export default function LibraryScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const db = await getDatabase();
-        if (!db) return; // web fallback — no progress data
-        const mastered = (await db.getAllAsync(
-          `SELECT kanji_id FROM kanji_progress
-           WHERE recognition_level >= 4 AND reading_level >= 4 AND writing_level >= 4`
-        )) as { kanji_id: number }[];
-        const unlocked = (await db.getAllAsync(
-          `SELECT kanji_id FROM kanji_progress
-           WHERE date_unlocked IS NOT NULL
-             AND NOT (recognition_level >= 4 AND reading_level >= 4 AND writing_level >= 4)`
-        )) as { kanji_id: number }[];
-        setLearnedIds(new Set(mastered.map((r: { kanji_id: number }) => r.kanji_id)));
-        setLearningIds(new Set(unlocked.map((r: { kanji_id: number }) => r.kanji_id)));
+        const mastered = await getMasteredKanjiIds();
+        const unlocked = await getUnlockedKanjiIds();
+        setLearnedIds(new Set(mastered));
+        setLearningIds(new Set(unlocked.filter((id: number) => !mastered.includes(id))));
       } catch {
         // progress tables may be empty on first launch
       }
@@ -134,8 +127,8 @@ export default function LibraryScreen() {
             const rows = (await searchVocabulary(query.trim())) as VocabRow[];
             if (!cancelled) setVocabResults(rows);
           } else {
-            const allVocab = require('@/assets/data/vocabulary.json') as VocabRow[];
-            if (!cancelled) setVocabResults(allVocab.slice(0, 200));
+            const rows = (await getAllVocabulary()) as VocabRow[];
+            if (!cancelled) setVocabResults(rows.slice(0, 200));
           }
         }
       } catch {
@@ -539,6 +532,7 @@ export default function LibraryScreen() {
         </View>
       ) : browseMode === 'kanji' ? (
         <FlatList
+          key="kanji-grid"
           data={filteredKanji}
           renderItem={renderKanjiCard}
           keyExtractor={(item) => `k-${item.id}`}
@@ -557,6 +551,7 @@ export default function LibraryScreen() {
         />
       ) : (
         <FlatList
+          key="vocab-list"
           data={filteredVocab}
           renderItem={renderVocabCard}
           keyExtractor={(item) => `v-${item.id}`}

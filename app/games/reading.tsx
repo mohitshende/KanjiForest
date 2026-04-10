@@ -398,6 +398,17 @@ export default function ReadingGame() {
             >
               {isCorrect ? 'Correct!' : `Answer: ${correctAnswer}`}
             </Text>
+            <View style={[styles.answerDetail, { backgroundColor: colors.surfaceElevated }]}>
+              <Text style={[styles.answerWord, { color: colors.textPrimary, fontFamily: 'NotoSansJP-Bold' }]}>
+                {currentVocab.word}
+              </Text>
+              <Text style={[styles.answerReading, { color: colors.accentBlue, fontFamily: 'NotoSansJP-Regular' }]}>
+                {currentVocab.reading}
+              </Text>
+              <Text style={[styles.answerMeaning, { color: colors.textSecondary }]}>
+                {currentVocab.meaning}
+              </Text>
+            </View>
             <Pressable
               style={[styles.nextBtn, { backgroundColor: colors.accentBlue }]}
               onPress={handleNext}
@@ -490,6 +501,16 @@ const styles = StyleSheet.create({
 
   resultArea: { marginTop: 16, alignItems: 'center', gap: 12 },
   resultText: { fontSize: 17, fontWeight: '700' },
+  answerDetail: {
+    width: '100%',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    gap: 4,
+  },
+  answerWord: { fontSize: 28 },
+  answerReading: { fontSize: 15 },
+  answerMeaning: { fontSize: 15 },
   nextBtn: {
     height: 48,
     borderRadius: 12,
