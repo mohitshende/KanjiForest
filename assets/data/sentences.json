@@ -1,0 +1,387 @@
+[
+  {
+    "id": 1,
+    "japanese": "今日は天気がいいです。",
+    "reading": "きょうはてんきがいいです。",
+    "english": "The weather is nice today.",
+    "vocab_ids": []
+  },
+  {
+    "id": 2,
+    "japanese": "毎朝六時に起きます。",
+    "reading": "まいあさろくじにおきます。",
+    "english": "I wake up at six every morning.",
+    "vocab_ids": []
+  },
+  {
+    "id": 3,
+    "japanese": "学校まで歩いて行きます。",
+    "reading": "がっこうまであるいていきます。",
+    "english": "I walk to school.",
+    "vocab_ids": []
+  },
+  {
+    "id": 4,
+    "japanese": "お茶を飲みませんか。",
+    "reading": "おちゃをのみませんか。",
+    "english": "Would you like to have some tea?",
+    "vocab_ids": []
+  },
+  {
+    "id": 5,
+    "japanese": "駅はどこですか。",
+    "reading": "えきはどこですか。",
+    "english": "Where is the station?",
+    "vocab_ids": []
+  },
+  {
+    "id": 6,
+    "japanese": "私は日本語を勉強しています。",
+    "reading": "わたしはにほんごをべんきょうしています。",
+    "english": "I am studying Japanese.",
+    "vocab_ids": []
+  },
+  {
+    "id": 7,
+    "japanese": "この本はとてもおもしろいです。",
+    "reading": "このほんはとてもおもしろいです。",
+    "english": "This book is very interesting.",
+    "vocab_ids": []
+  },
+  {
+    "id": 8,
+    "japanese": "昨日映画を見ました。",
+    "reading": "きのうえいがをみました。",
+    "english": "I watched a movie yesterday.",
+    "vocab_ids": []
+  },
+  {
+    "id": 9,
+    "japanese": "すみません、水をください。",
+    "reading": "すみません、みずをください。",
+    "english": "Excuse me, please give me water.",
+    "vocab_ids": []
+  },
+  {
+    "id": 10,
+    "japanese": "明日友達と会います。",
+    "reading": "あしたともだちとあいます。",
+    "english": "I will meet my friend tomorrow.",
+    "vocab_ids": []
+  },
+  {
+    "id": 11,
+    "japanese": "このりんごはおいしいです。",
+    "reading": "このりんごはおいしいです。",
+    "english": "This apple is delicious.",
+    "vocab_ids": []
+  },
+  {
+    "id": 12,
+    "japanese": "電車で会社に行きます。",
+    "reading": "でんしゃでかいしゃにいきます。",
+    "english": "I go to work by train.",
+    "vocab_ids": []
+  },
+  {
+    "id": 13,
+    "japanese": "先生は教室にいます。",
+    "reading": "せんせいはきょうしつにいます。",
+    "english": "The teacher is in the classroom.",
+    "vocab_ids": []
+  },
+  {
+    "id": 14,
+    "japanese": "今何時ですか。",
+    "reading": "いまなんじですか。",
+    "english": "What time is it now?",
+    "vocab_ids": []
+  },
+  {
+    "id": 15,
+    "japanese": "週末に買い物に行きたいです。",
+    "reading": "しゅうまつにかいものにいきたいです。",
+    "english": "I want to go shopping on the weekend.",
+    "vocab_ids": []
+  },
+  {
+    "id": 16,
+    "japanese": "母は料理が上手です。",
+    "reading": "はははりょうりがじょうずです。",
+    "english": "My mother is good at cooking.",
+    "vocab_ids": []
+  },
+  {
+    "id": 17,
+    "japanese": "右に曲がってください。",
+    "reading": "みぎにまがってください。",
+    "english": "Please turn right.",
+    "vocab_ids": []
+  },
+  {
+    "id": 18,
+    "japanese": "雨が降っています。",
+    "reading": "あめがふっています。",
+    "english": "It is raining.",
+    "vocab_ids": []
+  },
+  {
+    "id": 19,
+    "japanese": "日本の食べ物が好きです。",
+    "reading": "にほんのたべものがすきです。",
+    "english": "I like Japanese food.",
+    "vocab_ids": []
+  },
+  {
+    "id": 20,
+    "japanese": "来年日本に行きたいです。",
+    "reading": "らいねんにほんにいきたいです。",
+    "english": "I want to go to Japan next year.",
+    "vocab_ids": []
+  },
+  {
+    "id": 21,
+    "japanese": "お名前は何ですか。",
+    "reading": "おなまえはなんですか。",
+    "english": "What is your name?",
+    "vocab_ids": []
+  },
+  {
+    "id": 22,
+    "japanese": "図書館で本を読みます。",
+    "reading": "としょかんでほんをよみます。",
+    "english": "I read books at the library.",
+    "vocab_ids": []
+  },
+  {
+    "id": 23,
+    "japanese": "朝ごはんにパンを食べました。",
+    "reading": "あさごはんにぱんをたべました。",
+    "english": "I ate bread for breakfast.",
+    "vocab_ids": []
+  },
+  {
+    "id": 24,
+    "japanese": "あの山はとても高いです。",
+    "reading": "あのやまはとてもたかいです。",
+    "english": "That mountain is very tall.",
+    "vocab_ids": []
+  },
+  {
+    "id": 25,
+    "japanese": "猫が二匹います。",
+    "reading": "ねこがにひきいます。",
+    "english": "There are two cats.",
+    "vocab_ids": []
+  },
+  {
+    "id": 26,
+    "japanese": "夏は暑いです。",
+    "reading": "なつはあついです。",
+    "english": "Summer is hot.",
+    "vocab_ids": []
+  },
+  {
+    "id": 27,
+    "japanese": "冬は寒いですが、雪がきれいです。",
+    "reading": "ふゆはさむいですが、ゆきがきれいです。",
+    "english": "Winter is cold, but the snow is beautiful.",
+    "vocab_ids": []
+  },
+  {
+    "id": 28,
+    "japanese": "バスは十分おきに来ます。",
+    "reading": "ばすはじゅっぷんおきにきます。",
+    "english": "The bus comes every ten minutes.",
+    "vocab_ids": []
+  },
+  {
+    "id": 29,
+    "japanese": "コーヒーと紅茶とどちらが好きですか。",
+    "reading": "こーひーとこうちゃとどちらがすきですか。",
+    "english": "Which do you prefer, coffee or tea?",
+    "vocab_ids": []
+  },
+  {
+    "id": 30,
+    "japanese": "病院は銀行の隣にあります。",
+    "reading": "びょういんはぎんこうのとなりにあります。",
+    "english": "The hospital is next to the bank.",
+    "vocab_ids": []
+  },
+  {
+    "id": 31,
+    "japanese": "毎日漢字を五つ覚えます。",
+    "reading": "まいにちかんじをいつつおぼえます。",
+    "english": "I memorize five kanji every day.",
+    "vocab_ids": []
+  },
+  {
+    "id": 32,
+    "japanese": "窓を開けてもいいですか。",
+    "reading": "まどをあけてもいいですか。",
+    "english": "May I open the window?",
+    "vocab_ids": []
+  },
+  {
+    "id": 33,
+    "japanese": "兄は大学生です。",
+    "reading": "あにはだいがくせいです。",
+    "english": "My older brother is a university student.",
+    "vocab_ids": []
+  },
+  {
+    "id": 34,
+    "japanese": "新しい靴を買いました。",
+    "reading": "あたらしいくつをかいました。",
+    "english": "I bought new shoes.",
+    "vocab_ids": []
+  },
+  {
+    "id": 35,
+    "japanese": "公園で子供たちが遊んでいます。",
+    "reading": "こうえんでこどもたちがあそんでいます。",
+    "english": "Children are playing in the park.",
+    "vocab_ids": []
+  },
+  {
+    "id": 36,
+    "japanese": "晩ごはんは何を食べますか。",
+    "reading": "ばんごはんはなにをたべますか。",
+    "english": "What will you eat for dinner?",
+    "vocab_ids": []
+  },
+  {
+    "id": 37,
+    "japanese": "写真を撮ってもいいですか。",
+    "reading": "しゃしんをとってもいいですか。",
+    "english": "May I take a photo?",
+    "vocab_ids": []
+  },
+  {
+    "id": 38,
+    "japanese": "花がたくさん咲いています。",
+    "reading": "はながたくさんさいています。",
+    "english": "Many flowers are blooming.",
+    "vocab_ids": []
+  },
+  {
+    "id": 39,
+    "japanese": "日曜日に何をしますか。",
+    "reading": "にちようびになにをしますか。",
+    "english": "What do you do on Sundays?",
+    "vocab_ids": []
+  },
+  {
+    "id": 40,
+    "japanese": "この道をまっすぐ行ってください。",
+    "reading": "このみちをまっすぐいってください。",
+    "english": "Please go straight down this road.",
+    "vocab_ids": []
+  },
+  {
+    "id": 41,
+    "japanese": "宿題をもう終わりました。",
+    "reading": "しゅくだいをもうおわりました。",
+    "english": "I already finished my homework.",
+    "vocab_ids": []
+  },
+  {
+    "id": 42,
+    "japanese": "テーブルの上にりんごがあります。",
+    "reading": "てーぶるのうえにりんごがあります。",
+    "english": "There is an apple on the table.",
+    "vocab_ids": []
+  },
+  {
+    "id": 43,
+    "japanese": "昼ごはんを一緒に食べましょう。",
+    "reading": "ひるごはんをいっしょにたべましょう。",
+    "english": "Let's eat lunch together.",
+    "vocab_ids": []
+  },
+  {
+    "id": 44,
+    "japanese": "東京は人が多いです。",
+    "reading": "とうきょうはひとがおおいです。",
+    "english": "Tokyo has many people.",
+    "vocab_ids": []
+  },
+  {
+    "id": 45,
+    "japanese": "父は毎晩新聞を読みます。",
+    "reading": "ちちはまいばんしんぶんをよみます。",
+    "english": "My father reads the newspaper every evening.",
+    "vocab_ids": []
+  },
+  {
+    "id": 46,
+    "japanese": "あの白い建物は何ですか。",
+    "reading": "あのしろいたてものはなんですか。",
+    "english": "What is that white building?",
+    "vocab_ids": []
+  },
+  {
+    "id": 47,
+    "japanese": "電話番号を教えてください。",
+    "reading": "でんわばんごうをおしえてください。",
+    "english": "Please tell me your phone number.",
+    "vocab_ids": []
+  },
+  {
+    "id": 48,
+    "japanese": "春になると桜が咲きます。",
+    "reading": "はるになるとさくらがさきます。",
+    "english": "Cherry blossoms bloom when spring comes.",
+    "vocab_ids": []
+  },
+  {
+    "id": 49,
+    "japanese": "お腹が空きました。",
+    "reading": "おなかがすきました。",
+    "english": "I am hungry.",
+    "vocab_ids": []
+  },
+  {
+    "id": 50,
+    "japanese": "趣味は音楽を聞くことです。",
+    "reading": "しゅみはおんがくをきくことです。",
+    "english": "My hobby is listening to music.",
+    "vocab_ids": []
+  },
+  {
+    "id": 51,
+    "japanese": "切符を二枚ください。",
+    "reading": "きっぷをにまいください。",
+    "english": "Two tickets, please.",
+    "vocab_ids": []
+  },
+  {
+    "id": 52,
+    "japanese": "姉は病院で働いています。",
+    "reading": "あねはびょういんではたらいています。",
+    "english": "My older sister works at a hospital.",
+    "vocab_ids": []
+  },
+  {
+    "id": 53,
+    "japanese": "去年の夏に海に行きました。",
+    "reading": "きょねんのなつにうみにいきました。",
+    "english": "I went to the sea last summer.",
+    "vocab_ids": []
+  },
+  {
+    "id": 54,
+    "japanese": "もう少しゆっくり話してください。",
+    "reading": "もうすこしゆっくりはなしてください。",
+    "english": "Please speak a little more slowly.",
+    "vocab_ids": []
+  },
+  {
+    "id": 55,
+    "japanese": "魚と肉とどちらが好きですか。",
+    "reading": "さかなとにくとどちらがすきですか。",
+    "english": "Which do you like better, fish or meat?",
+    "vocab_ids": []
+  }
+]

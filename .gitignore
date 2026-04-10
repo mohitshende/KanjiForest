@@ -39,3 +39,10 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Claude
+.claude/
+.create-expo-app/
+memory/
+docs/
+skills-rRlzSG/

@@ -1,59 +1,79 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import { useDatabase } from '@/hooks/useDatabase';
+import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useProgressStore } from '@/stores/useProgressStore';
+import { useStreakStore } from '@/stores/useStreakStore';
 
-import { useColorScheme } from '@/components/useColorScheme';
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
+    'NotoSansJP-Regular': require('../assets/fonts/NotoSansJP-Regular.ttf'),
+    'NotoSansJP-Bold': require('../assets/fonts/NotoSansJP-Bold.ttf'),
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  const { isReady: dbReady } = useDatabase();
+  const [storesReady, setStoresReady] = useState(false);
+
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (dbReady) {
+      Promise.all([
+        useSettingsStore.getState().loadSettings(),
+        useProgressStore.getState().loadProgress(),
+        useStreakStore.getState().loadStreak(),
+      ]).then(() => setStoresReady(true));
+    }
+  }, [dbReady]);
+
+  useEffect(() => {
+    if (loaded && dbReady && storesReady) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, dbReady, storesReady]);
 
-  if (!loaded) {
-    return null;
-  }
+  if (!loaded || !dbReady || !storesReady) return null;
 
   return <RootLayoutNav />;
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const router = useRouter();
+  const segments = useSegments();
+  const onboardingComplete = useSettingsStore((s) => s.onboardingComplete);
+
+  useEffect(() => {
+    const inOnboarding = segments[0] === 'onboarding';
+
+    if (!onboardingComplete && !inOnboarding) {
+      router.replace('/onboarding');
+    }
+  }, [onboardingComplete, segments]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="kanji/[id]" />
+      <Stack.Screen name="vocab/[id]" />
+      <Stack.Screen name="games" />
+      <Stack.Screen name="lists" />
+      <Stack.Screen
+        name="onboarding/index"
+        options={{ gestureEnabled: false }}
+      />
+    </Stack>
   );
 }
