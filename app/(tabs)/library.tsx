@@ -99,17 +99,18 @@ export default function LibraryScreen() {
     (async () => {
       try {
         const db = await getDatabase();
-        const mastered = await db.getAllAsync<{ kanji_id: number }>(
+        if (!db) return; // web fallback — no progress data
+        const mastered = (await db.getAllAsync(
           `SELECT kanji_id FROM kanji_progress
            WHERE recognition_level >= 4 AND reading_level >= 4 AND writing_level >= 4`
-        );
-        const unlocked = await db.getAllAsync<{ kanji_id: number }>(
+        )) as { kanji_id: number }[];
+        const unlocked = (await db.getAllAsync(
           `SELECT kanji_id FROM kanji_progress
            WHERE date_unlocked IS NOT NULL
              AND NOT (recognition_level >= 4 AND reading_level >= 4 AND writing_level >= 4)`
-        );
-        setLearnedIds(new Set(mastered.map((r) => r.kanji_id)));
-        setLearningIds(new Set(unlocked.map((r) => r.kanji_id)));
+        )) as { kanji_id: number }[];
+        setLearnedIds(new Set(mastered.map((r: { kanji_id: number }) => r.kanji_id)));
+        setLearningIds(new Set(unlocked.map((r: { kanji_id: number }) => r.kanji_id)));
       } catch {
         // progress tables may be empty on first launch
       }
@@ -133,11 +134,8 @@ export default function LibraryScreen() {
             const rows = (await searchVocabulary(query.trim())) as VocabRow[];
             if (!cancelled) setVocabResults(rows);
           } else {
-            const db = await getDatabase();
-            const rows = (await db.getAllAsync(
-              'SELECT * FROM vocabulary ORDER BY frequency_rank LIMIT 200'
-            )) as VocabRow[];
-            if (!cancelled) setVocabResults(rows);
+            const allVocab = require('@/assets/data/vocabulary.json') as VocabRow[];
+            if (!cancelled) setVocabResults(allVocab.slice(0, 200));
           }
         }
       } catch {
