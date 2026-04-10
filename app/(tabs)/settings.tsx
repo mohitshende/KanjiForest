@@ -7,6 +7,8 @@ import {
   Switch,
   Pressable,
   Alert,
+  Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -286,6 +288,32 @@ export default function SettingsScreen() {
           <Ionicons name="warning-outline" size={18} color={colors.accentRed} />
         </Pressable>
 
+        {/* Download Android App — web only */}
+        {Platform.OS === 'web' && (
+          <>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+              GET THE APP
+            </Text>
+            <Pressable
+              style={[styles.downloadCard, { backgroundColor: colors.accentGreen + '12', borderColor: colors.accentGreen }]}
+              onPress={() => Linking.openURL('https://kanji-forest.vercel.app/assets/KanjiForest.apk')}
+            >
+              <View style={[styles.downloadIcon, { backgroundColor: colors.accentGreen + '20' }]}>
+                <Ionicons name="logo-android" size={28} color={colors.accentGreen} />
+              </View>
+              <View style={styles.downloadInfo}>
+                <Text style={[styles.downloadTitle, { color: colors.textPrimary }]}>
+                  Download for Android
+                </Text>
+                <Text style={[styles.downloadDesc, { color: colors.textSecondary }]}>
+                  Get the full native experience with offline support
+                </Text>
+              </View>
+              <Ionicons name="download-outline" size={22} color={colors.accentGreen} />
+            </Pressable>
+          </>
+        )}
+
         {/* About */}
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
           ABOUT
@@ -374,6 +402,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   actionText: { fontSize: 15, fontWeight: '500' },
+
+  downloadCard: {
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  downloadIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  downloadInfo: { flex: 1 },
+  downloadTitle: { fontSize: 16, fontWeight: '600' },
+  downloadDesc: { fontSize: 12, marginTop: 3, lineHeight: 16 },
 
   aboutSection: {
     paddingVertical: 16,

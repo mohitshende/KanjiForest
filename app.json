@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "KanjiForest",
-    "slug": "KanjiForest",
+    "slug": "kanji-forest-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -17,6 +17,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.kanjiforest.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -35,6 +36,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cd3ea1e1-0334-400e-97b5-4fa5878943e0"
+      }
+    },
+    "owner": "mohitshende"
   }
 }
