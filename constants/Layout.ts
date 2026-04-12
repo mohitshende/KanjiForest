@@ -30,10 +30,7 @@ export const Layout = {
     padding: 16,
     paddingPrimary: 20,
     shadow: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
+      boxShadow: '0px 2px 8px rgba(0,0,0,0.08)',
       elevation: 3,
     },
   },

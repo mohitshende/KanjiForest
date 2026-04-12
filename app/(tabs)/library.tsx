@@ -412,6 +412,7 @@ export default function LibraryScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.pillRow}
+        style={styles.pillScroll}
       >
         {jlptOptions.map((opt) => {
           const active = jlptFilter === opt.value;
@@ -446,6 +447,7 @@ export default function LibraryScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.pillRow}
+          style={styles.pillScroll}
         >
           {sortOptions.map((opt) => {
             const active = sortKey === opt.value;
@@ -487,6 +489,7 @@ export default function LibraryScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.pillRow}
+          style={styles.pillScroll}
         >
           {statusOptions.map((opt) => {
             const active = statusFilter === opt.value;
@@ -635,11 +638,17 @@ const styles = StyleSheet.create({
   },
 
   // Pills
+  pillScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    height: 46,
+  },
   pillRow: {
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingVertical: 6,
     gap: 8,
     flexDirection: 'row',
+    alignItems: 'center',
   },
   pill: {
     flexDirection: 'row',
@@ -656,7 +665,7 @@ const styles = StyleSheet.create({
 
   // Control / sort row
   controlRow: {
-    flexDirection: 'row',
+    height: 46,
   },
 
   // Results info

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Animated, {
@@ -102,9 +103,10 @@ export default function CustomTabBar({
 }: BottomTabBarProps) {
   const colors = useThemeColors();
   const hapticEnabled = useSettingsStore((s) => s.hapticFeedbackEnabled);
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 16) }]}>
       <View
         style={[
           styles.tabBar,
@@ -168,7 +170,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
     paddingHorizontal: 16,
   },
   tabBar: {
@@ -177,21 +178,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 6,
     borderWidth: 0.5,
+    boxShadow: '0px 8px 24px rgba(0,0,0,0.08)',
     ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.08,
-        shadowRadius: 24,
-      },
       android: {
         elevation: 12,
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.08,
-        shadowRadius: 24,
       },
     }),
   },

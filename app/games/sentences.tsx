@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, SlideInDown } from 'react-native-reanimated';
 import * as Speech from 'expo-speech';
 import { useThemeColors } from '@/hooks/useTheme';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -218,7 +218,7 @@ export default function SentencesGame() {
         </View>
 
         {/* Rating */}
-        {!difficulty ? (
+        {!difficulty && (
           <View style={styles.ratingRow}>
             <Pressable
               style={[styles.ratingBtn, { backgroundColor: colors.accentGreen + '15', borderColor: colors.accentGreen }]}
@@ -233,16 +233,26 @@ export default function SentencesGame() {
               <Text style={[styles.ratingText, { color: colors.accentRed }]}>Hard</Text>
             </Pressable>
           </View>
-        ) : (
+        )}
+      </View>
+
+      {difficulty && (
+        <Animated.View
+          entering={SlideInDown.duration(250)}
+          style={[
+            styles.continuePanel,
+            { backgroundColor: colors.surface, borderTopColor: colors.border },
+          ]}
+        >
           <Pressable
             style={[styles.nextBtn, { backgroundColor: colors.accentBlue }]}
             onPress={handleNext}
           >
-            <Text style={styles.nextBtnText}>Next</Text>
+            <Text style={styles.nextBtnText}>Continue</Text>
             <Ionicons name="arrow-forward" size={18} color="#FFF" />
           </Pressable>
-        )}
-      </View>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -306,6 +316,16 @@ const styles = StyleSheet.create({
   },
   ratingText: { fontSize: 16, fontWeight: '600' },
 
+  continuePanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+  },
   nextBtn: {
     height: 48,
     borderRadius: 12,

@@ -296,7 +296,7 @@ export default function SettingsScreen() {
             </Text>
             <Pressable
               style={[styles.downloadCard, { backgroundColor: colors.accentGreen + '12', borderColor: colors.accentGreen }]}
-              onPress={() => Linking.openURL('https://expo.dev/artifacts/eas/k2Jd7Bv14772xJmTvcRWE6.apk')}
+              onPress={() => Linking.openURL('https://kanji-forest.vercel.app/assets/KanjiForest.apk')}
             >
               <View style={[styles.downloadIcon, { backgroundColor: colors.accentGreen + '20' }]}>
                 <Ionicons name="logo-android" size={28} color={colors.accentGreen} />

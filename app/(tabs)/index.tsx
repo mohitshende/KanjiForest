@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,8 @@ import {
   getTreeOrder,
   KanjiStatus,
 } from '@/lib/treeOrder';
+import NotificationBell from '@/components/NotificationBell';
+import NotificationDropdown from '@/components/NotificationDropdown';
 
 const STATUS_COLORS: Record<KanjiStatus, string> = {
   locked: '#ABABAB',
@@ -39,6 +41,7 @@ export default function JourneyScreen() {
   const level = useProgressStore((s) => s.level);
   const totalXP = useProgressStore((s) => s.totalXP);
   const dailyLimit = useSettingsStore((s) => s.dailyNewKanjiLimit);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const treeOrder = useMemo(
     () => (kanjiData.length > 0 ? getTreeOrder(kanjiData) : []),
@@ -88,6 +91,7 @@ export default function JourneyScreen() {
             </Text>
           </View>
           <View style={styles.headerRight}>
+            <NotificationBell onPress={() => setShowNotifications(true)} />
             <View style={styles.streakBadge}>
               <Ionicons name="flame" size={18} color={colors.streakFlame} />
               <Text style={[styles.streakText, { color: colors.streakFlame }]}>
@@ -96,6 +100,11 @@ export default function JourneyScreen() {
             </View>
           </View>
         </Animated.View>
+
+        <NotificationDropdown
+          visible={showNotifications}
+          onClose={() => setShowNotifications(false)}
+        />
 
         {/* Today's Lesson Card */}
         <Animated.View entering={FadeInUp.delay(200)}>

@@ -6,6 +6,7 @@ import {
   Pressable,
   TextInput,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -13,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   FadeIn,
   FadeInUp,
+  SlideInDown,
   useAnimatedStyle,
   withSequence,
   withTiming,
@@ -227,7 +229,7 @@ export default function ReadingGame() {
         />
       </View>
 
-      <ScrollView style={styles.gameArea} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.gameArea} contentContainerStyle={{ paddingBottom: showAnswer ? 220 : 20 }} showsVerticalScrollIndicator={false}>
         {/* Word Card */}
         <Animated.View style={shakeStyle}>
           <View
@@ -389,38 +391,50 @@ export default function ReadingGame() {
           </View>
         )}
 
-        {showAnswer && (
-          <Animated.View entering={FadeIn} style={styles.resultArea}>
-            <Text
-              style={[
-                styles.resultText,
-                { color: isCorrect ? colors.accentGreen : colors.accentRed },
-              ]}
-            >
-              {isCorrect ? 'Correct!' : `Answer: ${correctAnswer}`}
-            </Text>
-            <View style={[styles.answerDetail, { backgroundColor: colors.surfaceElevated }]}>
-              <Text style={[styles.answerWord, { color: colors.textPrimary, fontFamily: 'NotoSansJP-Bold' }]}>
-                {currentVocab.word}
-              </Text>
-              <Text style={[styles.answerReading, { color: colors.accentBlue, fontFamily: 'NotoSansJP-Regular' }]}>
-                {currentVocab.reading}
-              </Text>
-              <Text style={[styles.answerMeaning, { color: colors.textSecondary }]}>
-                {currentVocab.meaning}
-              </Text>
-            </View>
-            <Pressable
-              style={[styles.nextBtn, { backgroundColor: colors.accentBlue }]}
-              onPress={handleNext}
-            >
-              <Text style={styles.nextBtnText}>Next</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFF" />
-            </Pressable>
-          </Animated.View>
-        )}
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {showAnswer && (
+        <Animated.View
+          entering={SlideInDown.duration(250)}
+          style={[
+            styles.answerPanel,
+            { backgroundColor: colors.surface, borderTopColor: colors.border },
+          ]}
+        >
+          <Text
+            style={[
+              styles.resultText,
+              { color: isCorrect ? colors.accentGreen : colors.accentRed },
+            ]}
+          >
+            {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+          </Text>
+          {!isCorrect && (
+            <Text style={[styles.correctAnswerText, { color: colors.textSecondary }]}>
+              Correct answer: <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>{correctAnswer}</Text>
+            </Text>
+          )}
+          <View style={[styles.answerDetail, { backgroundColor: colors.surfaceElevated }]}>
+            <Text style={[styles.answerWord, { color: colors.textPrimary, fontFamily: 'NotoSansJP-Bold' }]}>
+              {currentVocab.word}
+            </Text>
+            <Text style={[styles.answerReading, { color: colors.accentBlue, fontFamily: 'NotoSansJP-Regular' }]}>
+              {currentVocab.reading}
+            </Text>
+            <Text style={[styles.answerMeaning, { color: colors.textSecondary }]}>
+              {currentVocab.meaning}
+            </Text>
+          </View>
+          <Pressable
+            style={[styles.nextBtn, { backgroundColor: colors.accentBlue }]}
+            onPress={handleNext}
+          >
+            <Text style={styles.nextBtnText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFF" />
+          </Pressable>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -501,8 +515,19 @@ const styles = StyleSheet.create({
   },
   submitBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
 
-  resultArea: { marginTop: 16, alignItems: 'center', gap: 12 },
+  answerPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    gap: 10,
+  },
   resultText: { fontSize: 17, fontWeight: '700' },
+  correctAnswerText: { fontSize: 13 },
   answerDetail: {
     width: '100%',
     borderRadius: 12,

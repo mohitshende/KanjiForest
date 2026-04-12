@@ -6,6 +6,7 @@ import {
   Pressable,
   TextInput,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -13,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   FadeIn,
   FadeInUp,
+  SlideInDown,
   useAnimatedStyle,
   withSequence,
   withTiming,
@@ -248,7 +250,11 @@ export default function RecognitionGame() {
       </View>
 
       {/* Card */}
-      <ScrollView style={styles.gameArea} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.gameArea}
+        contentContainerStyle={{ paddingBottom: showAnswer ? 220 : 20 }}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View style={[styles.kanjiCard, scaleStyle, shakeStyle]}>
           <View
             style={[
@@ -405,46 +411,56 @@ export default function RecognitionGame() {
           </View>
         )}
 
-        {/* Result & Next */}
-        {showAnswer && (
-          <Animated.View entering={FadeIn} style={styles.resultArea}>
-            <Text
-              style={[
-                styles.resultText,
-                { color: isCorrect ? colors.accentGreen : colors.accentRed },
-              ]}
-            >
-              {isCorrect ? 'Correct!' : `Incorrect — ${correctAnswer}`}
+        <View style={{ height: 40 }} />
+      </ScrollView>
+
+      {/* Fixed bottom answer panel */}
+      {showAnswer && (
+        <Animated.View
+          entering={SlideInDown.duration(250)}
+          style={[styles.answerPanel, { backgroundColor: colors.surface, borderTopColor: colors.border }]}
+        >
+          <Text
+            style={[styles.resultText, { color: isCorrect ? colors.accentGreen : colors.accentRed }]}
+          >
+            {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+          </Text>
+          {!isCorrect && (
+            <Text style={[styles.correctAnswerText, { color: colors.textSecondary }]}>
+              Correct answer: <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>{correctAnswer}</Text>
             </Text>
-            <View style={[styles.answerDetail, { backgroundColor: colors.surfaceElevated }]}>
-              <Text style={[styles.answerKanji, { color: colors.textPrimary }]}>
-                {currentKanji.character}
-              </Text>
+          )}
+          <View style={styles.answerRow}>
+            <Text style={[styles.answerKanji, { color: colors.textPrimary }]}>
+              {currentKanji.character}
+            </Text>
+            <View style={styles.answerReadings}>
               <Text style={[styles.answerMeaning, { color: colors.textSecondary }]}>
                 {currentKanji.meaning}
               </Text>
-              {currentKanji.onyomi ? (
-                <Text style={[styles.answerReading, { color: colors.accentRed }]}>
-                  ON: {currentKanji.onyomi}
-                </Text>
-              ) : null}
-              {currentKanji.kunyomi ? (
-                <Text style={[styles.answerReading, { color: colors.accentBlue }]}>
-                  KUN: {currentKanji.kunyomi}
-                </Text>
-              ) : null}
+              <View style={styles.readingRow}>
+                {currentKanji.onyomi ? (
+                  <Text style={[styles.answerReading, { color: colors.accentRed }]}>
+                    ON: {currentKanji.onyomi}
+                  </Text>
+                ) : null}
+                {currentKanji.kunyomi ? (
+                  <Text style={[styles.answerReading, { color: colors.accentBlue }]}>
+                    KUN: {currentKanji.kunyomi}
+                  </Text>
+                ) : null}
+              </View>
             </View>
-            <Pressable
-              style={[styles.nextBtn, { backgroundColor: colors.accentBlue }]}
-              onPress={handleNext}
-            >
-              <Text style={styles.nextBtnText}>Next</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFF" />
-            </Pressable>
-          </Animated.View>
-        )}
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          </View>
+          <Pressable
+            style={[styles.nextBtn, { backgroundColor: isCorrect ? colors.accentGreen : colors.accentBlue }]}
+            onPress={handleNext}
+          >
+            <Text style={styles.nextBtnText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFF" />
+          </Pressable>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -528,18 +544,25 @@ const styles = StyleSheet.create({
   },
   submitBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
 
-  resultArea: { marginTop: 16, alignItems: 'center', gap: 12 },
-  resultText: { fontSize: 17, fontWeight: '700' },
-  answerDetail: {
-    width: '100%',
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-    gap: 4,
+  answerPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    gap: 10,
   },
-  answerKanji: { fontSize: 32, fontFamily: 'NotoSansJP-Bold' },
-  answerMeaning: { fontSize: 15 },
-  answerReading: { fontSize: 13, fontWeight: '500' },
+  resultText: { fontSize: 16, fontWeight: '700' },
+  correctAnswerText: { fontSize: 13 },
+  answerRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  answerKanji: { fontSize: 36, fontFamily: 'NotoSansJP-Bold' },
+  answerReadings: { flex: 1, gap: 2 },
+  answerMeaning: { fontSize: 14, fontWeight: '500' },
+  readingRow: { flexDirection: 'row', gap: 10 },
+  answerReading: { fontSize: 12, fontWeight: '500' },
   nextBtn: {
     height: 48,
     borderRadius: 12,
@@ -547,7 +570,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 32,
   },
   nextBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
 

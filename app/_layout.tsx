@@ -8,6 +8,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useProgressStore } from '@/stores/useProgressStore';
 import { useStreakStore } from '@/stores/useStreakStore';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -37,6 +38,7 @@ export default function RootLayout() {
         useSettingsStore.getState().loadSettings(),
         useProgressStore.getState().loadProgress(),
         useStreakStore.getState().loadStreak(),
+        useNotificationStore.getState().loadNotifications(),
       ]).then(() => setStoresReady(true));
     }
   }, [dbReady]);

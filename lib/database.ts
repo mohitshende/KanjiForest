@@ -88,7 +88,9 @@ export async function seedDatabase(): Promise<void> {
   const result = (await database.getFirstAsync(
     'SELECT COUNT(*) as count FROM kanji'
   )) as { count: number } | null;
-  if (result && result.count > 0) return;
+  if (result && result.count >= kanjiData.length) return;
+
+  await database.execAsync('BEGIN TRANSACTION;');
 
   for (const k of kanjiData) {
     await database.runAsync(
@@ -119,6 +121,8 @@ export async function seedDatabase(): Promise<void> {
       s.id, s.japanese, s.reading, s.english, JSON.stringify(s.vocab_ids || [])
     );
   }
+
+  await database.execAsync('COMMIT;');
 }
 
 // ═══════════════════════════════════════════════════════════════

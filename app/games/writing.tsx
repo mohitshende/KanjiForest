@@ -7,11 +7,12 @@ import {
   Dimensions,
   PanResponder,
   GestureResponderEvent,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, SlideInDown } from 'react-native-reanimated';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useThemeColors } from '@/hooks/useTheme';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -312,25 +313,31 @@ export default function WritingGame() {
           </Pressable>
         </View>
 
-        {/* Complete state */}
-        {isComplete && (
-          <Animated.View entering={FadeIn} style={styles.completeArea}>
-            <View style={styles.completeRow}>
-              <Ionicons name="checkmark-circle" size={28} color={colors.accentGreen} />
-              <Text style={[styles.completeText, { color: colors.accentGreen }]}>
-                {currentKanji.character} Complete!
-              </Text>
-            </View>
-            <Pressable
-              style={[styles.nextBtn, { backgroundColor: colors.accentBlue }]}
-              onPress={handleNext}
-            >
-              <Text style={styles.nextBtnText}>Next</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFF" />
-            </Pressable>
-          </Animated.View>
-        )}
       </View>
+
+      {isComplete && (
+        <Animated.View
+          entering={SlideInDown.duration(250)}
+          style={[
+            styles.completePanel,
+            { backgroundColor: colors.surface, borderTopColor: colors.border },
+          ]}
+        >
+          <View style={styles.completeRow}>
+            <Ionicons name="checkmark-circle" size={28} color={colors.accentGreen} />
+            <Text style={[styles.completeText, { color: colors.accentGreen }]}>
+              {currentKanji.character} Complete!
+            </Text>
+          </View>
+          <Pressable
+            style={[styles.nextBtn, { backgroundColor: colors.accentBlue }]}
+            onPress={handleNext}
+          >
+            <Text style={styles.nextBtnText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFF" />
+          </Pressable>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -391,7 +398,18 @@ const styles = StyleSheet.create({
   },
   controlText: { fontSize: 14, fontWeight: '500' },
 
-  completeArea: { marginTop: 24, alignItems: 'center', gap: 16 },
+  completePanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    gap: 14,
+    alignItems: 'center',
+  },
   completeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   completeText: { fontSize: 20, fontWeight: '700', fontFamily: 'NotoSansJP-Bold' },
 
