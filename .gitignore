@@ -40,6 +40,9 @@ yarn-error.*
 /ios
 /android
 
+# Large data files
+scripts/kanjidic2.xml
+
 # Claude
 .claude/
 .create-expo-app/
