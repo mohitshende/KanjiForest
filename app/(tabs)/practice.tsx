@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -6,6 +6,22 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useThemeColors } from '@/hooks/useTheme';
 import { useReviewQueue } from '@/hooks/useReviewQueue';
+import { getActivityLog } from '@/lib/database';
+
+interface TodayActivity {
+  reviews_done: number;
+  new_kanji_learned: number;
+  xp_earned: number;
+}
+
+interface Challenge {
+  id: string;
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  target: number;
+  progress: number;
+}
 
 interface GameCard {
   title: string;
@@ -19,6 +35,42 @@ export default function PracticeScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const { queue } = useReviewQueue();
+  const [today, setToday] = useState<TodayActivity>({ reviews_done: 0, new_kanji_learned: 0, xp_earned: 0 });
+
+  useEffect(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    getActivityLog(1).then((log: any[]) => {
+      const entry = log.find((l) => l.date === todayStr);
+      if (entry) setToday(entry);
+    });
+  }, []);
+
+  const challenges: Challenge[] = [
+    {
+      id: 'reviews',
+      title: 'Review 20 items',
+      icon: 'refresh-circle-outline',
+      color: colors.accentBlue,
+      target: 20,
+      progress: today.reviews_done,
+    },
+    {
+      id: 'newkanji',
+      title: 'Learn 3 new kanji',
+      icon: 'sparkles-outline',
+      color: colors.accentGreen,
+      target: 3,
+      progress: today.new_kanji_learned,
+    },
+    {
+      id: 'xp',
+      title: 'Earn 100 XP',
+      icon: 'star-outline',
+      color: colors.xpGold,
+      target: 100,
+      progress: today.xp_earned,
+    },
+  ];
 
   const games: GameCard[] = [
     {
@@ -77,6 +129,39 @@ export default function PracticeScreen() {
             </Pressable>
           </Animated.View>
         )}
+
+        {/* Daily Challenges */}
+        <Animated.View entering={FadeInUp.delay(150)}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24 }]}>
+            DAILY CHALLENGES
+          </Text>
+          <View style={[styles.challengesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {challenges.map((c, i) => {
+              const pct = Math.min(1, c.progress / c.target);
+              const done = pct >= 1;
+              return (
+                <View key={c.id} style={[styles.challengeRow, i < challenges.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+                  <View style={[styles.challengeIcon, { backgroundColor: c.color + '15' }]}>
+                    <Ionicons name={done ? 'checkmark-circle' : c.icon} size={20} color={done ? colors.accentGreen : c.color} />
+                  </View>
+                  <View style={styles.challengeInfo}>
+                    <View style={styles.challengeTitleRow}>
+                      <Text style={[styles.challengeTitle, { color: done ? colors.textMuted : colors.textPrimary }]}>
+                        {c.title}
+                      </Text>
+                      <Text style={[styles.challengeCount, { color: c.color }]}>
+                        {Math.min(c.progress, c.target)}/{c.target}
+                      </Text>
+                    </View>
+                    <View style={[styles.challengeTrack, { backgroundColor: colors.border }]}>
+                      <View style={[styles.challengeFill, { backgroundColor: done ? colors.accentGreen : c.color, width: `${pct * 100}%` }]} />
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </Animated.View>
 
         {/* Game cards */}
         <Text
@@ -205,4 +290,14 @@ const styles = StyleSheet.create({
   toolInfo: { flex: 1 },
   toolTitle: { fontSize: 15, fontWeight: '600' },
   toolDesc: { fontSize: 12, marginTop: 2 },
+
+  challengesCard: { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
+  challengeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
+  challengeIcon: { width: 38, height: 38, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  challengeInfo: { flex: 1 },
+  challengeTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  challengeTitle: { fontSize: 14, fontWeight: '500' },
+  challengeCount: { fontSize: 12, fontWeight: '600' },
+  challengeTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  challengeFill: { height: '100%', borderRadius: 2 },
 });

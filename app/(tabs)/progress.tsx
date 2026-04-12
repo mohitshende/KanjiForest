@@ -6,8 +6,8 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useThemeColors } from '@/hooks/useTheme';
 import { useProgressStore } from '@/stores/useProgressStore';
 import { useStreakStore } from '@/stores/useStreakStore';
-import { getActivityLog } from '@/lib/database';
-import { SRS_STAGE_COLORS } from '@/constants/SRS';
+import { getActivityLog, getReviewForecast, getLeeches } from '@/lib/database';
+import { SRS_STAGE_COLORS, LEECH_THRESHOLD } from '@/constants/SRS';
 
 interface ActivityEntry {
   date: string;
@@ -30,9 +30,13 @@ export default function ProgressScreen() {
   } = useProgressStore();
   const { currentStreak, longestStreak } = useStreakStore();
   const [activityLog, setActivityLog] = useState<ActivityEntry[]>([]);
+  const [forecast, setForecast] = useState<{ date: string; count: number }[]>([]);
+  const [leeches, setLeeches] = useState<any[]>([]);
 
   useEffect(() => {
     getActivityLog(365).then((data) => setActivityLog(data as ActivityEntry[]));
+    getReviewForecast(7).then(setForecast);
+    getLeeches(LEECH_THRESHOLD).then((data) => setLeeches(data as any[]));
   }, []);
 
   const accuracy =
@@ -54,6 +58,24 @@ export default function ProgressScreen() {
     }
     return days;
   }, [activityLog]);
+
+  // Last 7 days bar chart
+  const weeklyData = useMemo(() => {
+    const actMap = new Map(activityLog.map((a) => [a.date, a.reviews_done]));
+    const days: { label: string; count: number }[] = [];
+    const today = new Date();
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      days.push({ label: i === 0 ? 'Today' : dayLabels[d.getDay()], count: actMap.get(dateStr) || 0 });
+    }
+    return days;
+  }, [activityLog]);
+
+  const weeklyMax = useMemo(() => Math.max(...weeklyData.map((d) => d.count), 1), [weeklyData]);
+  const forecastMax = useMemo(() => Math.max(...forecast.map((d) => d.count), 1), [forecast]);
 
   const intensityColors = [
     colors.surfaceElevated,
@@ -244,6 +266,101 @@ export default function ProgressScreen() {
           </View>
         </Animated.View>
 
+        {/* Weekly Reviews Bar Chart */}
+        <Animated.View entering={FadeInUp.delay(450)}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>This Week</Text>
+            <View style={styles.barChart}>
+              {weeklyData.map((day, i) => (
+                <View key={i} style={styles.barColumn}>
+                  <Text style={[styles.barValue, { color: colors.textMuted }]}>
+                    {day.count > 0 ? day.count : ''}
+                  </Text>
+                  <View style={styles.barTrack}>
+                    <View
+                      style={[
+                        styles.barFill,
+                        {
+                          backgroundColor: day.label === 'Today' ? colors.accentBlue : colors.accentBlue + '60',
+                          height: `${(day.count / weeklyMax) * 100}%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.barLabel, { color: day.label === 'Today' ? colors.accentBlue : colors.textMuted }]}>
+                    {day.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* 7-Day Forecast */}
+        <Animated.View entering={FadeInUp.delay(500)}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Upcoming Reviews</Text>
+            <View style={styles.barChart}>
+              {forecast.map((day, i) => {
+                const d = new Date(day.date);
+                const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const label = i === 0 ? 'Today' : dayLabels[d.getDay()];
+                return (
+                  <View key={i} style={styles.barColumn}>
+                    <Text style={[styles.barValue, { color: colors.textMuted }]}>
+                      {day.count > 0 ? day.count : ''}
+                    </Text>
+                    <View style={styles.barTrack}>
+                      <View
+                        style={[
+                          styles.barFill,
+                          {
+                            backgroundColor: i === 0 ? colors.accentOrange : colors.accentOrange + '60',
+                            height: `${(day.count / forecastMax) * 100}%`,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.barLabel, { color: i === 0 ? colors.accentOrange : colors.textMuted }]}>
+                      {label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Leeches */}
+        {leeches.length > 0 && (
+          <Animated.View entering={FadeInUp.delay(550)}>
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.leechHeader}>
+                <Ionicons name="bug" size={18} color={colors.accentOrange} />
+                <Text style={[styles.cardTitle, { color: colors.textPrimary, marginBottom: 0 }]}>
+                  Leeches ({leeches.length})
+                </Text>
+              </View>
+              <Text style={[styles.leechSubtitle, { color: colors.textMuted }]}>
+                Items you've gotten wrong {LEECH_THRESHOLD}+ times
+              </Text>
+              <View style={styles.leechGrid}>
+                {leeches.slice(0, 12).map((k) => (
+                  <View key={k.id} style={[styles.leechCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.accentOrange + '40' }]}>
+                    <Text style={[styles.leechChar, { color: colors.textPrimary }]}>{k.character}</Text>
+                    <Text style={[styles.leechMeaning, { color: colors.textSecondary }]} numberOfLines={1}>{k.meaning}</Text>
+                  </View>
+                ))}
+              </View>
+              {leeches.length > 12 && (
+                <Text style={[styles.leechMore, { color: colors.textMuted }]}>
+                  +{leeches.length - 12} more
+                </Text>
+              )}
+            </View>
+          </Animated.View>
+        )}
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
@@ -329,4 +446,44 @@ const styles = StyleSheet.create({
   },
   legendSquare: { width: 10, height: 10, borderRadius: 2 },
   legendText: { fontSize: 10 },
+
+  barChart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: 100,
+    gap: 6,
+    marginTop: 4,
+  },
+  barColumn: {
+    flex: 1,
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'flex-end',
+    gap: 4,
+  },
+  barValue: { fontSize: 9, fontWeight: '600', height: 12 },
+  barTrack: {
+    width: '100%',
+    flex: 1,
+    justifyContent: 'flex-end',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  barFill: { width: '100%', borderRadius: 4, minHeight: 2 },
+  barLabel: { fontSize: 9, fontWeight: '600' },
+
+  leechHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  leechSubtitle: { fontSize: 12, marginBottom: 12 },
+  leechGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  leechCard: {
+    width: '22%',
+    flexGrow: 1,
+    borderRadius: 10,
+    padding: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  leechChar: { fontSize: 24, fontWeight: '700' },
+  leechMeaning: { fontSize: 9, marginTop: 2, textAlign: 'center' },
+  leechMore: { fontSize: 12, textAlign: 'center', marginTop: 8 },
 });
