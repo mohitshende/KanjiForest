@@ -78,6 +78,9 @@ function RootLayoutNav() {
         name="onboarding/index"
         options={{ gestureEnabled: false }}
       />
+      <Stack.Screen name="furigana" />
+      <Stack.Screen name="compare" />
+      <Stack.Screen name="radicals/[id]" />
     </Stack>
   );
 }

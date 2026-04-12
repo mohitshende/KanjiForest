@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useThemeColors } from '@/hooks/useTheme';
 import {
   getKanjiById,
   getVocabularyForKanji,
   getKanjiProgress,
   unlockKanji,
+  getAllCustomLists,
+  updateCustomList,
+  getCustomListById,
 } from '@/lib/database';
 import { SRS_LEVEL_NAMES } from '@/constants/SRS';
 
@@ -52,6 +56,13 @@ interface ProgressData {
   date_unlocked: number | null;
 }
 
+interface CustomList {
+  id: number;
+  name: string;
+  kanji_ids: string;
+  vocab_ids: string;
+}
+
 export default function KanjiDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useThemeColors();
@@ -60,6 +71,9 @@ export default function KanjiDetailScreen() {
   const [vocab, setVocab] = useState<VocabData[]>([]);
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [userNote, setUserNote] = useState('');
+  const [lists, setLists] = useState<CustomList[]>([]);
+  const [showListPicker, setShowListPicker] = useState(false);
+  const saveNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -69,12 +83,36 @@ export default function KanjiDetailScreen() {
       getKanjiById(kanjiId),
       getVocabularyForKanji(kanjiId),
       getKanjiProgress(kanjiId),
-    ]).then(([k, v, p]) => {
+      AsyncStorage.getItem(`kanjiforest_note_${kanjiId}`),
+      getAllCustomLists(),
+    ]).then(([k, v, p, note, l]) => {
       setKanji(k as KanjiData | null);
       setVocab(v as VocabData[]);
       setProgress(p as ProgressData | null);
+      if (note) setUserNote(note);
+      setLists(l as CustomList[]);
     });
   }, [id]);
+
+  const handleNoteChange = (text: string) => {
+    setUserNote(text);
+    if (saveNoteTimer.current) clearTimeout(saveNoteTimer.current);
+    saveNoteTimer.current = setTimeout(() => {
+      AsyncStorage.setItem(`kanjiforest_note_${id}`, text);
+    }, 600);
+  };
+
+  const handleAddToList = async (listId: number) => {
+    if (!id) return;
+    const kanjiId = parseInt(id, 10);
+    const list = await getCustomListById(listId) as CustomList | null;
+    if (!list) return;
+    const existingIds: number[] = JSON.parse(list.kanji_ids || '[]');
+    if (!existingIds.includes(kanjiId)) {
+      await updateCustomList(listId, [...existingIds, kanjiId], JSON.parse(list.vocab_ids || '[]'));
+    }
+    setShowListPicker(false);
+  };
 
   const handleStartLearning = async () => {
     if (!id) return;
@@ -276,7 +314,7 @@ export default function KanjiDetailScreen() {
               placeholderTextColor={colors.textMuted}
               multiline
               value={userNote}
-              onChangeText={setUserNote}
+              onChangeText={handleNoteChange}
             />
           </View>
         </Animated.View>
@@ -323,6 +361,40 @@ export default function KanjiDetailScreen() {
             ))}
           </View>
         </Animated.View>
+
+        {/* Add to List Button */}
+        <Pressable
+          style={[styles.addListButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => setShowListPicker(!showListPicker)}
+        >
+          <Ionicons name="bookmark-outline" size={18} color={colors.accentGreen} />
+          <Text style={[styles.addListText, { color: colors.accentGreen }]}>Add to Custom List</Text>
+          <Ionicons name={showListPicker ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
+        </Pressable>
+
+        {showListPicker && (
+          <Animated.View entering={FadeInUp.delay(0)}>
+            <View style={[styles.listPickerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {lists.length === 0 ? (
+                <Text style={[styles.listPickerEmpty, { color: colors.textMuted }]}>
+                  No custom lists yet. Create one in Practice → Custom Lists.
+                </Text>
+              ) : (
+                lists.map((list) => (
+                  <Pressable
+                    key={list.id}
+                    style={[styles.listPickerRow, { borderBottomColor: colors.border }]}
+                    onPress={() => handleAddToList(list.id)}
+                  >
+                    <Ionicons name="list-outline" size={16} color={colors.accentBlue} />
+                    <Text style={[styles.listPickerName, { color: colors.textPrimary }]}>{list.name}</Text>
+                    <Ionicons name="add-circle-outline" size={18} color={colors.accentGreen} />
+                  </Pressable>
+                ))
+              )}
+            </View>
+          </Animated.View>
+        )}
 
         {/* Start Learning Button */}
         {!progress?.date_unlocked && (
@@ -475,4 +547,32 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
   },
+
+  addListButton: {
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  addListText: { fontSize: 15, fontWeight: '600' },
+
+  listPickerCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+  listPickerEmpty: { padding: 16, fontSize: 13, textAlign: 'center' },
+  listPickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    borderBottomWidth: 1,
+  },
+  listPickerName: { flex: 1, fontSize: 15 },
 });

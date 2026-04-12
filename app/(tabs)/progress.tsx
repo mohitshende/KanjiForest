@@ -6,8 +6,9 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useThemeColors } from '@/hooks/useTheme';
 import { useProgressStore } from '@/stores/useProgressStore';
 import { useStreakStore } from '@/stores/useStreakStore';
-import { getActivityLog, getReviewForecast, getLeeches } from '@/lib/database';
+import { getActivityLog, getReviewForecast, getLeeches, getSRSBreakdown } from '@/lib/database';
 import { SRS_STAGE_COLORS, LEECH_THRESHOLD } from '@/constants/SRS';
+import { ACHIEVEMENTS, ACHIEVEMENT_MAP } from '@/constants/Achievements';
 
 interface ActivityEntry {
   date: string;
@@ -27,16 +28,19 @@ export default function ProgressScreen() {
     vocabLearnedCount,
     totalReviews,
     totalCorrect,
+    achievements,
   } = useProgressStore();
-  const { currentStreak, longestStreak } = useStreakStore();
+  const { currentStreak, longestStreak, streakFreezes } = useStreakStore();
   const [activityLog, setActivityLog] = useState<ActivityEntry[]>([]);
   const [forecast, setForecast] = useState<{ date: string; count: number }[]>([]);
   const [leeches, setLeeches] = useState<any[]>([]);
+  const [srsBreakdown, setSrsBreakdown] = useState({ apprentice: 0, guru: 0, master: 0, enlightened: 0, burned: 0 });
 
   useEffect(() => {
     getActivityLog(365).then((data) => setActivityLog(data as ActivityEntry[]));
     getReviewForecast(7).then(setForecast);
     getLeeches(LEECH_THRESHOLD).then((data) => setLeeches(data as any[]));
+    getSRSBreakdown().then(setSrsBreakdown);
   }, []);
 
   const accuracy =
@@ -113,9 +117,17 @@ export default function ProgressScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={[styles.longestStreak, { color: colors.textMuted }]}>
-              Longest: {longestStreak} days
-            </Text>
+            <View style={styles.streakFooter}>
+              <Text style={[styles.longestStreak, { color: colors.textMuted }]}>
+                Longest: {longestStreak} days
+              </Text>
+              <View style={styles.freezeRow}>
+                <Ionicons name="shield-checkmark-outline" size={14} color={colors.accentBlue} />
+                <Text style={[styles.freezeText, { color: colors.accentBlue }]}>
+                  {streakFreezes} freeze{streakFreezes !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            </View>
           </View>
         </Animated.View>
 
@@ -204,6 +216,32 @@ export default function ProgressScreen() {
                 Accuracy
               </Text>
             </View>
+          </View>
+        </Animated.View>
+
+        {/* SRS Stage Breakdown */}
+        <Animated.View entering={FadeInUp.delay(340)}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>SRS Stages</Text>
+            {([
+              { label: 'Apprentice', value: srsBreakdown.apprentice, color: SRS_STAGE_COLORS.apprentice },
+              { label: 'Guru', value: srsBreakdown.guru, color: SRS_STAGE_COLORS.guru },
+              { label: 'Master', value: srsBreakdown.master, color: SRS_STAGE_COLORS.master },
+              { label: 'Enlightened', value: srsBreakdown.enlightened, color: SRS_STAGE_COLORS.enlightened },
+              { label: 'Burned', value: srsBreakdown.burned, color: SRS_STAGE_COLORS.burned },
+            ] as { label: string; value: number; color: string }[]).map((s) => {
+              const total = srsBreakdown.apprentice + srsBreakdown.guru + srsBreakdown.master + srsBreakdown.enlightened + srsBreakdown.burned;
+              const pct = total > 0 ? (s.value / total) * 100 : 0;
+              return (
+                <View key={s.label} style={styles.srsRow}>
+                  <Text style={[styles.srsLabel, { color: s.color }]}>{s.label}</Text>
+                  <View style={[styles.srsTrack, { backgroundColor: colors.border }]}>
+                    <View style={[styles.srsFill, { backgroundColor: s.color, width: `${pct}%` }]} />
+                  </View>
+                  <Text style={[styles.srsCount, { color: colors.textMuted }]}>{s.value}</Text>
+                </View>
+              );
+            })}
           </View>
         </Animated.View>
 
@@ -361,6 +399,42 @@ export default function ProgressScreen() {
           </Animated.View>
         )}
 
+        {/* Achievements */}
+        <Animated.View entering={FadeInUp.delay(600)}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+              Achievements ({achievements.length}/{ACHIEVEMENTS.length})
+            </Text>
+            <View style={styles.achievementsGrid}>
+              {ACHIEVEMENTS.map((a) => {
+                const unlocked = achievements.includes(a.id);
+                return (
+                  <View
+                    key={a.id}
+                    style={[
+                      styles.achievementCard,
+                      {
+                        backgroundColor: unlocked ? a.color + '15' : colors.surfaceElevated,
+                        borderColor: unlocked ? a.color + '40' : colors.border,
+                        opacity: unlocked ? 1 : 0.45,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={a.icon as any}
+                      size={24}
+                      color={unlocked ? a.color : colors.textMuted}
+                    />
+                    <Text style={[styles.achievementTitle, { color: unlocked ? colors.textPrimary : colors.textMuted }]} numberOfLines={2}>
+                      {a.title}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        </Animated.View>
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
@@ -386,7 +460,10 @@ const styles = StyleSheet.create({
   },
   streakNumber: { fontSize: 40, fontWeight: '700' },
   streakLabel: { fontSize: 15 },
+  streakFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   longestStreak: { fontSize: 13 },
+  freezeRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  freezeText: { fontSize: 12, fontWeight: '600' },
 
   card: {
     borderRadius: 16,
@@ -486,4 +563,22 @@ const styles = StyleSheet.create({
   leechChar: { fontSize: 24, fontWeight: '700' },
   leechMeaning: { fontSize: 9, marginTop: 2, textAlign: 'center' },
   leechMore: { fontSize: 12, textAlign: 'center', marginTop: 8 },
+
+  srsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  srsLabel: { fontSize: 12, fontWeight: '600', width: 80 },
+  srsTrack: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
+  srsFill: { height: '100%', borderRadius: 3 },
+  srsCount: { fontSize: 12, width: 30, textAlign: 'right' },
+
+  achievementsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  achievementCard: {
+    width: '30%',
+    flexGrow: 1,
+    borderRadius: 12,
+    padding: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    gap: 6,
+  },
+  achievementTitle: { fontSize: 10, textAlign: 'center', fontWeight: '600' },
 });

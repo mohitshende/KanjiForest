@@ -231,6 +231,44 @@ export default function PracticeScreen() {
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </Pressable>
 
+        <Pressable
+          style={[
+            styles.toolRow,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+          onPress={() => router.push('/furigana' as any)}
+        >
+          <Ionicons name="text-outline" size={22} color={colors.accentPurple} />
+          <View style={styles.toolInfo}>
+            <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>
+              Furigana Reader
+            </Text>
+            <Text style={[styles.toolDesc, { color: colors.textSecondary }]}>
+              Paste text to see kanji readings
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.toolRow,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+          onPress={() => router.push('/compare' as any)}
+        >
+          <Ionicons name="swap-horizontal-outline" size={22} color={colors.accentOrange} />
+          <View style={styles.toolInfo}>
+            <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>
+              Kanji Compare
+            </Text>
+            <Text style={[styles.toolDesc, { color: colors.textSecondary }]}>
+              Compare two kanji side by side
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Pressable>
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>

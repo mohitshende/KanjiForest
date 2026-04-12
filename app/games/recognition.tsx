@@ -29,6 +29,7 @@ import { generateOptions, partialMatch } from '@/lib/quiz';
 import { useProgressStore } from '@/stores/useProgressStore';
 import { useStreakStore } from '@/stores/useStreakStore';
 import { XP_PER_CORRECT, XP_STREAK_BONUS } from '@/constants/SRS';
+import { checkAchievements } from '@/lib/checkAchievements';
 
 interface KanjiItem {
   id: number;
@@ -64,6 +65,7 @@ export default function RecognitionGame() {
   const [showHint, setShowHint] = useState(false);
   const [stage, setStage] = useState<GameStage>('meaning_from_kanji');
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [wrongItems, setWrongItems] = useState<KanjiItem[]>([]);
 
   const shakeX = useSharedValue(0);
   const cardScale = useSharedValue(1);
@@ -136,6 +138,9 @@ export default function RecognitionGame() {
       setStreak(0);
       recordIncorrect(currentKanji.id);
       recordReview(false);
+      setWrongItems((prev) =>
+        prev.find((k) => k.id === currentKanji.id) ? prev : [...prev, currentKanji]
+      );
       shakeX.value = withSequence(
         withTiming(-10, { duration: 50 }),
         withTiming(10, { duration: 50 }),
@@ -153,6 +158,7 @@ export default function RecognitionGame() {
   const handleNext = () => {
     const nextIndex = currentIndex + 1;
     if (nextIndex >= queue.length) {
+      checkAchievements({ sessionCorrect: totalCorrect, sessionTotal: totalAnswered + 1 });
       setSessionComplete(true);
       return;
     }
@@ -183,30 +189,79 @@ export default function RecognitionGame() {
   if (sessionComplete) {
     const accuracy =
       totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+    const xpEarned = totalCorrect * XP_PER_CORRECT;
+    const isPerfect = wrongItems.length === 0;
 
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.centered}>
-          <Animated.View entering={FadeInUp}>
+        <ScrollView contentContainerStyle={styles.summaryContent} showsVerticalScrollIndicator={false}>
+          <Animated.View entering={FadeInUp.delay(0)} style={styles.summaryHero}>
             <Ionicons
-              name="checkmark-circle"
-              size={64}
-              color={colors.accentGreen}
+              name={isPerfect ? 'trophy' : 'checkmark-circle'}
+              size={72}
+              color={isPerfect ? colors.xpGold : colors.accentGreen}
             />
+            <Text style={[styles.completeTitle, { color: colors.textPrimary }]}>
+              {isPerfect ? 'Perfect Session!' : 'Session Complete!'}
+            </Text>
           </Animated.View>
-          <Text style={[styles.completeTitle, { color: colors.textPrimary }]}>
-            Session Complete!
-          </Text>
-          <Text style={[styles.completeStats, { color: colors.textSecondary }]}>
-            {totalCorrect}/{totalAnswered} correct ({accuracy}%)
-          </Text>
-          <Pressable
-            style={[styles.primaryBtn, { backgroundColor: colors.accentBlue }]}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.primaryBtnText}>Done</Text>
-          </Pressable>
-        </View>
+
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.summaryStatsRow}>
+            <View style={[styles.summaryStat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.summaryStatValue, { color: colors.accentGreen }]}>{totalCorrect}</Text>
+              <Text style={[styles.summaryStatLabel, { color: colors.textMuted }]}>Correct</Text>
+            </View>
+            <View style={[styles.summaryStat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.summaryStatValue, { color: colors.accentRed }]}>{totalAnswered - totalCorrect}</Text>
+              <Text style={[styles.summaryStatLabel, { color: colors.textMuted }]}>Wrong</Text>
+            </View>
+            <View style={[styles.summaryStat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.summaryStatValue, { color: colors.accentBlue }]}>{accuracy}%</Text>
+              <Text style={[styles.summaryStatLabel, { color: colors.textMuted }]}>Accuracy</Text>
+            </View>
+            <View style={[styles.summaryStat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.summaryStatValue, { color: colors.xpGold }]}>+{xpEarned}</Text>
+              <Text style={[styles.summaryStatLabel, { color: colors.textMuted }]}>XP</Text>
+            </View>
+          </Animated.View>
+
+          {wrongItems.length > 0 && (
+            <Animated.View entering={FadeInUp.delay(200)}>
+              <Text style={[styles.weakTitle, { color: colors.textSecondary }]}>REVIEW THESE</Text>
+              <View style={[styles.weakCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {wrongItems.map((k, i) => (
+                  <Pressable
+                    key={k.id}
+                    style={[
+                      styles.weakItem,
+                      i < wrongItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
+                    ]}
+                    onPress={() => router.push(`/kanji/${k.id}` as any)}
+                  >
+                    <Text style={[styles.weakKanji, { color: colors.textPrimary }]}>{k.character}</Text>
+                    <View style={styles.weakInfo}>
+                      <Text style={[styles.weakMeaning, { color: colors.textPrimary }]}>{k.meaning}</Text>
+                      <Text style={[styles.weakReading, { color: colors.textMuted }]}>
+                        {[k.onyomi && `ON: ${k.onyomi}`, k.kunyomi && `KUN: ${k.kunyomi}`].filter(Boolean).join('  ')}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                  </Pressable>
+                ))}
+              </View>
+            </Animated.View>
+          )}
+
+          <Animated.View entering={FadeInUp.delay(300)}>
+            <Pressable
+              style={[styles.primaryBtn, { backgroundColor: colors.accentBlue }]}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.primaryBtnText}>Done</Text>
+            </Pressable>
+          </Animated.View>
+          <View style={{ height: 40 }} />
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -573,6 +628,25 @@ const styles = StyleSheet.create({
   },
   nextBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
 
+  summaryContent: { padding: 24, paddingTop: 40 },
+  summaryHero: { alignItems: 'center', gap: 12, marginBottom: 24 },
+  summaryStatsRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
+  summaryStat: {
+    flex: 1, borderRadius: 14, borderWidth: 1,
+    padding: 12, alignItems: 'center', gap: 4,
+  },
+  summaryStatValue: { fontSize: 22, fontWeight: '700' },
+  summaryStatLabel: { fontSize: 11, fontWeight: '600' },
+  weakTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 10 },
+  weakCard: { borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 20 },
+  weakItem: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 12, gap: 14,
+  },
+  weakKanji: { fontSize: 32, fontFamily: 'NotoSansJP-Bold', width: 42, textAlign: 'center' },
+  weakInfo: { flex: 1, gap: 2 },
+  weakMeaning: { fontSize: 15, fontWeight: '500' },
+  weakReading: { fontSize: 12 },
   completeTitle: { fontSize: 28, fontWeight: '700' },
   completeStats: { fontSize: 17 },
   primaryBtn: {

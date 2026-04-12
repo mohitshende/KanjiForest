@@ -29,6 +29,7 @@ import { useProgressStore } from '@/stores/useProgressStore';
 import { useStreakStore } from '@/stores/useStreakStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { XP_PER_CORRECT } from '@/constants/SRS';
+import { checkAchievements } from '@/lib/checkAchievements';
 
 interface VocabItem {
   id: number;
@@ -64,6 +65,7 @@ export default function ReadingGame() {
   const [useTypedInput, setUseTypedInput] = useState(false);
   const [typedAnswer, setTypedAnswer] = useState('');
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [wrongItems, setWrongItems] = useState<VocabItem[]>([]);
 
   const shakeX = useSharedValue(0);
 
@@ -128,6 +130,9 @@ export default function ReadingGame() {
       haptics.error();
       setStreak(0);
       recordReview(false);
+      setWrongItems((prev) =>
+        prev.find((v) => v.id === currentVocab.id) ? prev : [...prev, currentVocab]
+      );
       shakeX.value = withSequence(
         withTiming(-10, { duration: 50 }),
         withTiming(10, { duration: 50 }),
@@ -145,6 +150,7 @@ export default function ReadingGame() {
   const handleNext = () => {
     const nextIndex = currentIndex + 1;
     if (nextIndex >= queue.length) {
+      checkAchievements({ sessionCorrect: totalCorrect, sessionTotal: totalAnswered + 1 });
       setSessionComplete(true);
       return;
     }
@@ -177,23 +183,63 @@ export default function ReadingGame() {
   if (sessionComplete) {
     const accuracy =
       totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+    const xpEarned = totalCorrect * XP_PER_CORRECT;
+    const isPerfect = wrongItems.length === 0;
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.centered}>
-          <Ionicons name="checkmark-circle" size={64} color={colors.accentGreen} />
-          <Text style={[styles.completeTitle, { color: colors.textPrimary }]}>
-            Session Complete!
-          </Text>
-          <Text style={[styles.completeStats, { color: colors.textSecondary }]}>
-            {totalCorrect}/{totalAnswered} correct ({accuracy}%)
-          </Text>
-          <Pressable
-            style={[styles.primaryBtn, { backgroundColor: colors.accentBlue }]}
-            onPress={() => router.back()}
-          >
+        <ScrollView contentContainerStyle={styles.summaryContent} showsVerticalScrollIndicator={false}>
+          <Animated.View entering={FadeIn} style={styles.summaryHero}>
+            <Ionicons name={isPerfect ? 'trophy' : 'checkmark-circle'} size={72}
+              color={isPerfect ? colors.xpGold : colors.accentGreen} />
+            <Text style={[styles.completeTitle, { color: colors.textPrimary }]}>
+              {isPerfect ? 'Perfect Session!' : 'Session Complete!'}
+            </Text>
+          </Animated.View>
+
+          <View style={styles.summaryStatsRow}>
+            <View style={[styles.summaryStat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.summaryStatValue, { color: colors.accentGreen }]}>{totalCorrect}</Text>
+              <Text style={[styles.summaryStatLabel, { color: colors.textMuted }]}>Correct</Text>
+            </View>
+            <View style={[styles.summaryStat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.summaryStatValue, { color: colors.accentRed }]}>{totalAnswered - totalCorrect}</Text>
+              <Text style={[styles.summaryStatLabel, { color: colors.textMuted }]}>Wrong</Text>
+            </View>
+            <View style={[styles.summaryStat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.summaryStatValue, { color: colors.accentBlue }]}>{accuracy}%</Text>
+              <Text style={[styles.summaryStatLabel, { color: colors.textMuted }]}>Accuracy</Text>
+            </View>
+            <View style={[styles.summaryStat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.summaryStatValue, { color: colors.xpGold }]}>+{xpEarned}</Text>
+              <Text style={[styles.summaryStatLabel, { color: colors.textMuted }]}>XP</Text>
+            </View>
+          </View>
+
+          {wrongItems.length > 0 && (
+            <>
+              <Text style={[styles.weakTitle, { color: colors.textSecondary }]}>REVIEW THESE</Text>
+              <View style={[styles.weakCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {wrongItems.map((v, i) => (
+                  <View key={v.id} style={[
+                    styles.weakItem,
+                    i < wrongItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
+                  ]}>
+                    <View style={styles.weakVocabLeft}>
+                      <Text style={[styles.weakWord, { color: colors.textPrimary }]}>{v.word}</Text>
+                      <Text style={[styles.weakReading, { color: colors.accentBlue }]}>{v.reading}</Text>
+                    </View>
+                    <Text style={[styles.weakMeaning, { color: colors.textSecondary }]} numberOfLines={2}>{v.meaning}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
+
+          <Pressable style={[styles.primaryBtn, { backgroundColor: colors.accentBlue }]} onPress={() => router.back()}>
             <Text style={styles.primaryBtnText}>Done</Text>
           </Pressable>
-        </View>
+          <View style={{ height: 40 }} />
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -549,6 +595,19 @@ const styles = StyleSheet.create({
   },
   nextBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
 
+  summaryContent: { padding: 24, paddingTop: 40 },
+  summaryHero: { alignItems: 'center', gap: 12, marginBottom: 24 },
+  summaryStatsRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
+  summaryStat: { flex: 1, borderRadius: 14, borderWidth: 1, padding: 12, alignItems: 'center', gap: 4 },
+  summaryStatValue: { fontSize: 22, fontWeight: '700' },
+  summaryStatLabel: { fontSize: 11, fontWeight: '600' },
+  weakTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 10 },
+  weakCard: { borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 20 },
+  weakItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, gap: 14 },
+  weakVocabLeft: { width: 80, gap: 2 },
+  weakWord: { fontSize: 20, fontFamily: 'NotoSansJP-Bold' },
+  weakReading: { fontSize: 12, fontFamily: 'NotoSansJP-Regular' },
+  weakMeaning: { flex: 1, fontSize: 14 },
   completeTitle: { fontSize: 28, fontWeight: '700' },
   completeStats: { fontSize: 17 },
   primaryBtn: {

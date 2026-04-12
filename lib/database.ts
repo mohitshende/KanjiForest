@@ -147,6 +147,12 @@ export async function getKanjiById(id: number) {
   return database.getFirstAsync('SELECT * FROM kanji WHERE id = ?', id);
 }
 
+export async function getKanjiByCharacter(character: string) {
+  if (isWeb) return kanjiData.find((k: any) => k.character === character) || null;
+  const database = await getNativeDatabase();
+  return database.getFirstAsync('SELECT * FROM kanji WHERE character = ?', character);
+}
+
 export async function getKanjiByJlptLevel(level: number) {
   if (isWeb) return kanjiData.filter((k: any) => k.jlpt_level === level);
   const database = await getNativeDatabase();
@@ -180,6 +186,66 @@ export async function getAllRadicals() {
   if (isWeb) return radicalsData;
   const database = await getNativeDatabase();
   return database.getAllAsync('SELECT * FROM radicals ORDER BY id');
+}
+
+export async function getLeeches(threshold: number = 7) {
+  if (isWeb) {
+    const leechIds: number[] = [];
+    for (const [kanjiId, p] of kanjiProgressMap.entries()) {
+      if ((p.times_incorrect || 0) >= threshold) leechIds.push(kanjiId);
+    }
+    return kanjiData.filter((k: any) => leechIds.includes(k.id));
+  }
+  const database = await getNativeDatabase();
+  return database.getAllAsync(
+    `SELECT k.* FROM kanji k
+     JOIN kanji_progress p ON k.id = p.kanji_id
+     WHERE p.times_incorrect >= ?
+     ORDER BY p.times_incorrect DESC`,
+    threshold
+  );
+}
+
+export async function getSRSBreakdown(): Promise<{
+  apprentice: number;
+  guru: number;
+  master: number;
+  enlightened: number;
+  burned: number;
+}> {
+  const empty = { apprentice: 0, guru: 0, master: 0, enlightened: 0, burned: 0 };
+  if (isWeb) {
+    for (const p of kanjiProgressMap.values()) {
+      const lvl = Math.max(
+        p.recognition_level || 0,
+        p.reading_level || 0,
+        p.writing_level || 0
+      );
+      if (lvl >= 1 && lvl <= 4) empty.apprentice++;
+      else if (lvl >= 5 && lvl <= 6) empty.guru++;
+      else if (lvl === 7) empty.master++;
+      else if (lvl === 8) empty.enlightened++;
+      else if (lvl === 9) empty.burned++;
+    }
+    return empty;
+  }
+  const database = await getNativeDatabase();
+  const rows: any[] = await database.getAllAsync(
+    `SELECT
+      CAST(MAX(recognition_level, reading_level, writing_level) AS INTEGER) as max_level,
+      COUNT(*) as cnt
+     FROM kanji_progress
+     GROUP BY max_level`
+  );
+  for (const row of rows) {
+    const lvl = row.max_level;
+    if (lvl >= 1 && lvl <= 4) empty.apprentice += row.cnt;
+    else if (lvl >= 5 && lvl <= 6) empty.guru += row.cnt;
+    else if (lvl === 7) empty.master += row.cnt;
+    else if (lvl === 8) empty.enlightened += row.cnt;
+    else if (lvl === 9) empty.burned += row.cnt;
+  }
+  return empty;
 }
 
 export async function getKanjiByRadical(radicalId: number) {
@@ -378,6 +444,59 @@ export async function getActivityLog(days: number = 365) {
   }
   const database = await getNativeDatabase();
   return database.getAllAsync(`SELECT * FROM activity_log ORDER BY date DESC LIMIT ?`, days);
+}
+
+export async function getReviewForecast(days: number = 7): Promise<{ date: string; count: number }[]> {
+  const result: { date: string; count: number }[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const dateStrings: string[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    dateStrings.push(d.toISOString().split('T')[0]);
+  }
+
+  if (isWeb) {
+    const counts = new Map<string, number>(dateStrings.map((d) => [d, 0]));
+    for (const progress of kanjiProgressMap.values()) {
+      for (const field of ['next_recognition_review', 'next_reading_review', 'next_writing_review']) {
+        const ts: number | null = progress[field];
+        if (ts) {
+          const d = new Date(ts);
+          d.setHours(0, 0, 0, 0);
+          const ds = d.toISOString().split('T')[0];
+          if (counts.has(ds)) counts.set(ds, (counts.get(ds) || 0) + 1);
+        }
+      }
+    }
+    for (const date of dateStrings) result.push({ date, count: counts.get(date) || 0 });
+    return result;
+  }
+
+  const database = await getNativeDatabase();
+  const startTs = today.getTime();
+  const endTs = today.getTime() + days * 86400000;
+
+  const rows = await database.getAllAsync(
+    `SELECT next_recognition_review as ts FROM kanji_progress WHERE ts BETWEEN ? AND ?
+     UNION ALL
+     SELECT next_reading_review FROM kanji_progress WHERE next_reading_review BETWEEN ? AND ?
+     UNION ALL
+     SELECT next_writing_review FROM kanji_progress WHERE next_writing_review BETWEEN ? AND ?`,
+    startTs, endTs, startTs, endTs, startTs, endTs
+  ) as { ts: number }[];
+
+  const counts = new Map<string, number>(dateStrings.map((d) => [d, 0]));
+  for (const { ts } of rows) {
+    const d = new Date(ts);
+    d.setHours(0, 0, 0, 0);
+    const ds = d.toISOString().split('T')[0];
+    if (counts.has(ds)) counts.set(ds, (counts.get(ds) || 0) + 1);
+  }
+  for (const date of dateStrings) result.push({ date, count: counts.get(date) || 0 });
+  return result;
 }
 
 // ─── Custom lists ───
