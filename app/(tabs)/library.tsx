@@ -19,6 +19,7 @@ import {
   searchVocabulary,
   getAllKanji,
   getAllVocabulary,
+  getAllRadicals,
   getMasteredKanjiIds,
   getUnlockedKanjiIds,
 } from '@/lib/database';
@@ -49,7 +50,15 @@ interface VocabRow {
   frequency_rank: number;
 }
 
-type BrowseMode = 'kanji' | 'vocabulary';
+interface RadicalRow {
+  id: number;
+  character: string;
+  meaning: string;
+  stroke_count: number;
+  reading: string;
+}
+
+type BrowseMode = 'kanji' | 'vocabulary' | 'radicals';
 type JlptFilter = 'all' | 5 | 4 | 3 | 2 | 1 | 'grade';
 type SortKey = 'frequency' | 'grade' | 'jlpt' | 'strokes';
 type StatusFilter = 'all' | 'learned' | 'learning' | 'locked';
@@ -88,6 +97,7 @@ export default function LibraryScreen() {
 
   const [kanjiResults, setKanjiResults] = useState<KanjiRow[]>([]);
   const [vocabResults, setVocabResults] = useState<VocabRow[]>([]);
+  const [radicalsList, setRadicalsList] = useState<RadicalRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Progress id sets for status filtering
@@ -110,8 +120,19 @@ export default function LibraryScreen() {
     })();
   }, []);
 
+  // Load radicals once
+  useEffect(() => {
+    (async () => {
+      try {
+        const rows = (await getAllRadicals()) as RadicalRow[];
+        setRadicalsList(rows);
+      } catch {}
+    })();
+  }, []);
+
   // Fetch data whenever query or browse mode changes
   useEffect(() => {
+    if (browseMode === 'radicals') { setLoading(false); return; }
     let cancelled = false;
     setLoading(true);
 
@@ -309,6 +330,23 @@ export default function LibraryScreen() {
     [colors, handleVocabPress]
   );
 
+  // --- radicals grouped by stroke count ------------------------------------
+
+  const radicalsByStroke = useMemo(() => {
+    const groups: { strokeCount: number; items: RadicalRow[] }[] = [];
+    const map = new Map<number, RadicalRow[]>();
+    for (const r of radicalsList) {
+      const sc = r.stroke_count || 0;
+      if (!map.has(sc)) map.set(sc, []);
+      map.get(sc)!.push(r);
+    }
+    const sorted = Array.from(map.keys()).sort((a, b) => a - b);
+    for (const sc of sorted) {
+      groups.push({ strokeCount: sc, items: map.get(sc)! });
+    }
+    return groups;
+  }, [radicalsList]);
+
   // --- pill helpers --------------------------------------------------------
 
   const jlptOptions: { label: string; value: JlptFilter }[] = [
@@ -380,12 +418,7 @@ export default function LibraryScreen() {
           ]}
           onPress={() => setBrowseMode('kanji')}
         >
-          <Text
-            style={[
-              styles.modeButtonText,
-              { color: browseMode === 'kanji' ? '#FFFFFF' : colors.textSecondary },
-            ]}
-          >
+          <Text style={[styles.modeButtonText, { color: browseMode === 'kanji' ? '#FFFFFF' : colors.textSecondary }]}>
             Kanji
           </Text>
         </TouchableOpacity>
@@ -396,19 +429,25 @@ export default function LibraryScreen() {
           ]}
           onPress={() => setBrowseMode('vocabulary')}
         >
-          <Text
-            style={[
-              styles.modeButtonText,
-              { color: browseMode === 'vocabulary' ? '#FFFFFF' : colors.textSecondary },
-            ]}
-          >
+          <Text style={[styles.modeButtonText, { color: browseMode === 'vocabulary' ? '#FFFFFF' : colors.textSecondary }]}>
             Vocabulary
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.modeButton,
+            browseMode === 'radicals' && [styles.modeButtonActive, { backgroundColor: colors.accentGreen }],
+          ]}
+          onPress={() => setBrowseMode('radicals')}
+        >
+          <Text style={[styles.modeButtonText, { color: browseMode === 'radicals' ? '#FFFFFF' : colors.textSecondary }]}>
+            Radicals
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Filter pills (horizontal scroll) */}
-      <ScrollView
+      {/* Filter pills — hidden in radicals mode */}
+      {browseMode !== 'radicals' && <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.pillRow}
@@ -439,10 +478,10 @@ export default function LibraryScreen() {
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </ScrollView>}
 
-      {/* Sort row */}
-      <View style={styles.controlRow}>
+      {/* Sort row — hidden in radicals mode */}
+      {browseMode !== 'radicals' && <View style={styles.controlRow}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -481,7 +520,7 @@ export default function LibraryScreen() {
             );
           })}
         </ScrollView>
-      </View>
+      </View>}
 
       {/* Status filter row (kanji only) */}
       {browseMode === 'kanji' && (
@@ -524,7 +563,9 @@ export default function LibraryScreen() {
         <Text style={[styles.resultsCount, { color: colors.textMuted }]}>
           {browseMode === 'kanji'
             ? `${filteredKanji.length} kanji`
-            : `${filteredVocab.length} words`}
+            : browseMode === 'vocabulary'
+            ? `${filteredVocab.length} words`
+            : `${radicalsList.length} radicals`}
         </Text>
       </View>
 
@@ -533,6 +574,33 @@ export default function LibraryScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accentRed} />
         </View>
+      ) : browseMode === 'radicals' ? (
+        <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+          {radicalsByStroke.map(({ strokeCount, items }) => (
+            <View key={strokeCount}>
+              <Text style={[styles.strokeGroupHeader, { color: colors.textMuted, borderBottomColor: colors.border }]}>
+                {strokeCount} stroke{strokeCount !== 1 ? 's' : ''}
+              </Text>
+              <View style={styles.radicalGrid}>
+                {items.map((radical) => (
+                  <TouchableOpacity
+                    key={radical.id}
+                    style={[styles.radicalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    activeOpacity={0.7}
+                    onPress={() => router.push(`/radicals/${radical.id}` as any)}
+                  >
+                    <Text style={[styles.radicalChar, { color: colors.textPrimary }]}>
+                      {radical.character}
+                    </Text>
+                    <Text style={[styles.radicalMeaning, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {radical.meaning}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       ) : browseMode === 'kanji' ? (
         <FlatList
           key="kanji-grid"
@@ -795,5 +863,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'NotoSansJP-Regular',
     marginTop: 12,
+  },
+
+  // Radical grid
+  strokeGroupHeader: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    marginTop: 8,
+    borderBottomWidth: 1,
+    marginBottom: 10,
+  },
+  radicalGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 8,
+  },
+  radicalCard: {
+    width: '21%',
+    aspectRatio: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 6,
+  },
+  radicalChar: {
+    fontSize: 28,
+    fontFamily: 'NotoSansJP-Bold',
+    lineHeight: 36,
+  },
+  radicalMeaning: {
+    fontSize: 9,
+    fontFamily: 'NotoSansJP-Regular',
+    textAlign: 'center',
+    marginTop: 2,
   },
 });

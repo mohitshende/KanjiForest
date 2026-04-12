@@ -182,6 +182,24 @@ export async function getAllRadicals() {
   return database.getAllAsync('SELECT * FROM radicals ORDER BY id');
 }
 
+export async function getKanjiByRadical(radicalId: number) {
+  if (isWeb) {
+    return kanjiData.filter((k: any) => {
+      try {
+        const ids = typeof k.radical_ids === 'string'
+          ? JSON.parse(k.radical_ids)
+          : (k.radical_ids || []);
+        return ids.includes(radicalId);
+      } catch { return false; }
+    });
+  }
+  const database = await getNativeDatabase();
+  return database.getAllAsync(
+    `SELECT * FROM kanji WHERE radical_ids LIKE ? ORDER BY frequency_rank ASC`,
+    [`%${radicalId}%`]
+  );
+}
+
 // ─── Progress helpers ───
 
 function getOrCreateProgress(kanjiId: number) {
